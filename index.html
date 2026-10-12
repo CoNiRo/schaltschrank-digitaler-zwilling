@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitaler Zwilling - Schaltschrank IHK-Projekt 2026</title>
+    <!-- Google Model Viewer Skript für das 3D-Modell -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        /* Kopfzeile */
+        header {
+            background-color: #1f1f1f;
+            padding: 15px 30px;
+            border-bottom: 2px solid #0066cc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.2rem; color: #ffffff; }
+        header span { font-size: 0.85rem; color: #888; }
+
+        /* Hauptbereich: Aufteilung in 3D-Ansicht (links) und Info-Leiste (rechts) */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 3D-Viewer Bereich */
+        .viewer-container {
+            flex: 2;
+            background-color: #1a1a1a;
+            position: relative;
+        }
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+        }
+
+        /* Hotspot-Marker im 3D-Raum */
+        .hotspot {
+            background: rgba(255, 68, 68, 0.7);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease-out;
+            padding: 0;
+        }
+        .hotspot:hover {
+            transform: scale(1.2);
+            background: rgba(255, 68, 68, 1);
+        }
+        .hotspot.active-hotspot {
+            background: rgba(0, 255, 204, 1);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 1);
+            transform: scale(1.4);
+        }
+
+        /* Sidebar für Bauteile & Dokumentation (Rechts) */
+        .sidebar {
+            flex: 1;
+            background-color: #1e1e1e;
+            border-left: 1px solid #333;
+            padding: 25px;
+            overflow-y: auto;
+            max-width: 420px;
+        }
+        .sidebar h2 { font-size: 1.1rem; color: #4da6ff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        .component-card {
+            background: #2a2a2a;
+            border: 1px solid #3d3d3d;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .component-card:hover {
+            border-color: #0066cc;
+            background: #2f2f2f;
+        }
+        .component-card h3 { margin: 0 0 6px 0; font-size: 0.9rem; color: #fff; }
+        .component-card p { margin: 0; font-size: 0.8rem; color: #aaa; line-height: 1.4; }
+        
+        /* Hervorhebung für aktive Bauteile */
+        .component-card.active {
+            border-color: #00ffcc;
+            background: #1a2634;
+        }
+
+        /* Responsiv für Smartphones */
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .viewer-container { height: 50vh; }
+            .sidebar { max-width: 100%; height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Digitaler Schaltschrank – IHK AP2 Mechatroniker 2026</h1>
+        <span>Prüfungsaufgabe 0942</span>
+    </header>
+
+    <div class="main-container">
+        <!-- Links: Das drehbare 3D-Modell mit Hotspots -->
+        <div class="viewer-container">
+            <model-viewer id="cabinet" src="schaltschrank.glb" alt="Digitaler Zwilling Schaltschrank" camera-controls shadow-intensity="1">
+                <!-- Getrennte Hotspots für Schaltschrank-Ebenen -->
+                <button class="hotspot" slot="hotspot-1" data-position="-0.3 0.25 0.11" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-2" data-position="0.125 0.1 0.11" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-3" data-position="0.04 0.27 0.11" data-normal="0 0 1"></button> <!-- Leitungsschutzschalter -->
+                <button class="hotspot" slot="hotspot-4" data-position="0.0 -0.1 0.11" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-5" data-position="0.2 0.1 0.11" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-6" data-position="-0.025 -0.29 0.05" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-7" data-position="0.17 0.27 0.11" data-normal="0 0 1"></button> <!-- Schütze -->
+                <button class="hotspot" slot="hotspot-7b" data-position="-0.20 0.1 0.11" data-normal="0 0 1"></button> <!-- Motorschutz -->
+                <button class="hotspot" slot="hotspot-8" data-position="0.3 -0.15 0.105" data-normal="0 0 1"></button>
+                <button class="hotspot" slot="hotspot-9" data-position="0.3 -0.3 0.105" data-normal="0 0 1"></button>
+            </model-viewer>
+        </div>
+
+        <!-- Rechts: Das Info-Dashboard für Bauteile nach IHK-Struktur -->
+        <div class="sidebar">
+            <h2>Komponenten-Übersicht (IHK 0942)</h2>
+            <p style="font-size: 0.8rem; color: #888; margin-bottom: 15px;">Klicken Sie auf ein Bauteil für Details und Kameraposition:</p>
+
+            <!-- Bauteil 1 -->
+            <div class="component-card" id="card-1" onclick="focusComponent(-0.3, 0.25, 0.11, 'hotspot-1', 1)">
+                <h3>1. Hauptschalter (-QB1 / -XD0)</h3>
+                <p>3-poliger Lasttrennschalter (ca. 25 A) zur Netztrennung der 400V-Drehstromversorgung[cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 2 -->
+            <div class="component-card" id="card-2" onclick="focusComponent(0.125, 0.1, 0.11, 'hotspot-2', 2)">
+                <h3>2. Fehlerstromschutzschalter (-FB1 / RCD)</h3>
+                <p>Personenschutz (16 A / 10 mA, Typ A) zur Fehlerstromüberwachung[cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 3 -->
+            <div class="component-card" id="card-3" onclick="focusComponent(0.05, 0.25, 0.11, 'hotspot-3', 3)">
+                <h3>3. Schmelzsicherungeinsätze (-FC0)</h3>
+                <p>Überstrom- bzw. Kurzschlussschutz für den Hauptstromkreis.</p>
+            </div>
+
+            <!-- Bauteil 4 -->
+            <div class="component-card" id="card-4" onclick="focusComponent(0.0, -0.1, 0.11, 'hotspot-4', 4)">
+                <h3>4. SPS-Steuerung & Netzteil (-TB1 / -KE1)</h3>
+                <p>24V DC Netzteil (4A) und SPS-System (24 Eingänge / 24 Ausgänge) als Rechenkern[cite: 15, 16].</p>
+            </div>
+
+            <!-- Bauteil 5 -->
+            <div class="component-card" id="card-5" onclick="focusComponent(0.2, 0.1, 0.11, 'hotspot-5', 5)">
+                <h3>5. Sicherheits-Schaltgerät (-KE2 / NOT-AUS)</h3>
+                <p>Zweikanaliger NOT-AUS-Überwachungskreis mit Querschlusserkennung[cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 6 -->
+            <div class="component-card" id="card-6" onclick="focusComponent(-0.025, -0.29, 0.05, 'hotspot-6', 6)">
+                <h3>6. Reihenklemmenleiste (-XD1 / -XDPE)</h3>
+                <p>Potentialverteilung für PE, N, 24V PELV sowie Rangierung externer Signale[cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 7: Schütze (Getrennt) -->
+            <div class="component-card" id="card-7" onclick="focusComponent(0.25, -0.15, 0.11, 'hotspot-7', 7)">
+                <h3>7a. Leistungsschütze (-QA2, -QA3)</h3>
+                <p>Als Schließer hintereinandergeschaltete Schütze zur Ausfallsicherung (Redundanz) im Motorstromkreis[cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 7b: Motorschutz (Getrennt) -->
+            <div class="component-card" id="card-7b" onclick="focusComponent(0.25, -0.25, 0.11, 'hotspot-7b', '7b')">
+                <h3>7b. Motorschutzrelais (-FC7)</h3>
+                <p>Thermo-magnetischer Motorschutz zur Überwachung des Laststromkreises. [cite: 16].</p>
+            </div>
+
+            <!-- Bauteil 8 -->
+            <div class="component-card" id="card-8" onclick="focusComponent(0.3, -0.15, 0.105, 'hotspot-8', 8)">
+                <h3>8. Anzeige- und Bedieneinheit (-UC2)</h3>
+                <p>Enthält Taster (-SJ2 bis -SJ12), Leuchtmelder (-PF1 bis -PF14) und Signalsäule (-UA3)[cite: 16, 18].</p>
+            </div>
+
+            <!-- Bauteil 9 -->
+            <div class="component-card" id="card-9" onclick="focusComponent(0.3, -0.3, 0.105, 'hotspot-9', 9)">
+                <h3>9. Mechanisches Achsenmodell & Magazin</h3>
+                <p>Spindelantrieb (X-Achse), Zylinder (-MM20, -MM30, -MM40), Gabellichtschranke & Magnet[cite: 9, 14, 15].</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function focusComponent(x, y, z, hotspotSlot, cardId) {
+            const viewer = document.getElementById('cabinet');
+            
+            // Kamera-Ziel und Zoom anpassen
+            viewer.cameraTarget = `${x}m ${y}m ${z}m`;
+            viewer.fieldOfView = "25deg";
+
+            // Alle Hotspots und Karten zurücksetzen
+            viewer.querySelectorAll('.hotspot').forEach(h => h.classList.remove('active-hotspot'));
+            document.querySelectorAll('.component-card').forEach(c => c.classList.remove('active'));
+
+            // Aktiven Hotspot & Karte hervorheben
+            const activeHotspot = viewer.querySelector(`[slot="${hotspotSlot}"]`);
+            if (activeHotspot) {
+                activeHotspot.classList.add('active-hotspot');
+            }
+            document.getElementById('card-' + cardId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
