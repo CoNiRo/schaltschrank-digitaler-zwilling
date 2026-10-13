@@ -1,5 +1,5 @@
 /* ==========================================================
- * protocol.js – Prüfprotokoll nach DIN VDE 0100-600 (Auszug)
+ * protocol.js – Prüfprotokoll
  * Zwei getrennte Protokolle (Vorbereitung / Inbetriebnahme),
  * automatisch im Browser gespeichert, druckbar als PDF.
  * ========================================================== */
@@ -7,7 +7,7 @@
   "use strict";
   const root = document.getElementById("pane-protocol");
   const KEYS = { prep: "schaltschrank.protokoll.vorbereitung", start: "schaltschrank.protokoll.inbetriebnahme" };
-  const TITLES = { prep: "Vorbereitung der praktischen Aufgabe", start: "Inbetriebnahme am Prüfungstag" };
+  const TITLES = { prep: PROTOCOL.modes.prep.long, start: PROTOCOL.modes.start.long };
   const ISO_ROWS = 4;
 
   // Richtwerte (DIN VDE 0100-600) – nur als Hinweis, die Bewertung trifft die prüfende Person
@@ -126,17 +126,16 @@
     const modeSwitch = h("div", { class: "seg noprint", role: "group", "aria-label": "Protokollart" },
       ...Object.entries(TITLES).map(([k, label]) =>
         h("button", { type: "button", class: "seg-btn" + (k === mode ? " is-active" : ""),
-          onClick: () => { mode = k; load(); render(); } }, k === "prep" ? "Vorbereitung" : "Inbetriebnahme")));
+          onClick: () => { mode = k; load(); render(); } }, PROTOCOL.modes[k].short)));
 
     const head = h("div", { class: "page-head" },
-      h("h2", null, "Prüfprotokoll nach DIN VDE 0100-600 (Auszug)"),
+      h("h2", null, PROTOCOL.title),
       h("div", { class: "page-tools noprint" }, modeSwitch,
         h("button", { class: "btn", type: "button", onClick: () => window.print() }, "⎙ Drucken / als PDF speichern"),
         h("button", { class: "btn", type: "button", onClick: () => {
           if (confirm(`Protokoll „${TITLES[mode]}“ wirklich leeren?`)) { store.remove(KEYS[mode]); load(); render(); }
         } }, "Zurücksetzen")),
-      h("p", { class: "note noprint" },
-        "Es werden zwei Protokolle benötigt: eines zur Vorbereitung und ein weiteres bei der Inbetriebnahme am Prüfungstag. Eingaben werden automatisch in diesem Browser gespeichert."),
+      h("p", { class: "note noprint" }, PROTOCOL.note),
       h("p", { class: "print-title" }, `Protokoll: ${TITLES[mode]}`));
 
     const header = h("fieldset", { class: "pf-grid" }, h("legend", null, "Kopfdaten"),
@@ -144,7 +143,7 @@
       field("Datum", "pdatum", { type: "date" }), field("Kunden-Nr.", "kunde"),
       field("Prüfprotokoll-Nr.", "pnr"), field("Blattnummer", "blatt"),
       field("Auftraggeber", "ag", { wide: true }), field("Auftragnehmer", "an", { wide: true }),
-      field("Anlage", "anlage", { wide: true, placeholder: "z. B. Schaltschrank mit Achsenmodell" }),
+      field("Anlage", "anlage", { wide: true, placeholder: "z. B. Schaltschrank Typ …" }),
       field("Prüfer", "pruefer"), field("Prüfung nach", "norm", { placeholder: "DIN VDE 0100-600" }));
 
     const art = h("fieldset", { class: "art" }, h("legend", null, "Art der Prüfung"),

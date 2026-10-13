@@ -1,10 +1,8 @@
 /* ==========================================================
  * grafcet.js – GRAFCET-Ablaufpläne der Bereitstellung (Seiten 43–47)
- * Ansicht 1: Simulation von G_Auto (Schritt für Schritt, je Würfelart)
- * Ansicht 2–6: Pläne als Schritt-/Übergangsliste
- * Hinweis: Das GRAFCET des Vorbereitungsauftrags (Seite 55/56) enthält
- * bewusst Lücken und ist die eigentliche Prüfungsaufgabe – es ist hier
- * nicht vorausgefüllt.
+ * Ansicht 1: Simulation von G_Auto (Schritt für Schritt, je Ablaufvariante)
+ * Weitere Ansichten: Pläne als Schritt-/Übergangsliste
+ * Die Pläne stehen in js/data.js (GRAFCETS) und lassen sich dort ersetzen.
  * ========================================================== */
 (() => {
   "use strict";
@@ -14,7 +12,7 @@
   const TABS = [["sim", "Simulation G_Auto"], ...GRAFCETS.map((g) => [g.id, g.title])];
 
   let tab = "sim";
-  let kind = "kunststoff";
+  let kind = Object.keys(auto.paths)[0];
   let idx = 0;
 
   const body = h("div", { class: "gc-body" });
@@ -67,7 +65,7 @@
         h("div", { class: "gc-acts" }, s.act.length ? s.act.map(actionBox) : h("span", { class: "gc-none" }, s.init ? "Anfangsschritt – wartet auf Start" : "keine Aktion"))),
       edge
         ? h("div", { class: "gc-edge big" }, h("span", { class: "gc-bar" }), h("span", null, h("small", null, "Weiter, sobald"), h("br"), h("span", { class: "gc-cond" }, edge.c)), h("span", { class: "gc-to" }, `→ Schritt ${edge.to}`))
-        : h("p", { class: "note" }, "Zyklus beendet. Bei leerem Magazin (-BG21 * ¬-BG51 * -BG52) geht es zurück zu Schritt 500, sonst weiter mit Schritt 501."));
+        : h("p", { class: "note" }, GRAFCET_META.simEnd));
 
     const controls = h("div", { class: "page-tools" },
       h("button", { class: "btn", type: "button", disabled: idx === 0, onClick: () => { idx--; draw(); } }, "← Zurück"),
@@ -89,8 +87,8 @@
     onClick: () => { tab = id; draw(); } }, label)));
 
   root.append(h("div", { class: "page-head" },
-      h("h2", null, "GRAFCET – Ablaufplan der Bereitstellung"),
-      h("p", { class: "note" }, "Pläne von Seite 43–47. Das GRAFCET des Vorbereitungsauftrags (Seite 55/56) ist die Prüfungsaufgabe und deshalb nicht vorausgefüllt."),
+      h("h2", null, GRAFCET_META.title),
+      h("p", { class: "note" }, GRAFCET_META.note),
       tabs,
       h("div", { class: "page-tools noprint" }, h("button", { type: "button", class: "btn", onClick: () => window.print() }, "⎙ Aktuellen Plan drucken / PDF"))),
     body);

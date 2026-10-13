@@ -42,18 +42,20 @@
     h("thead", null, h("tr", null, h("th", null, "Teil"), h("th", null, "Ablage"), h("th", null, "Verhalten"))),
     h("tbody", null, REWORK_TARGET.map((r) => h("tr", null, r.map((c) => h("td", null, bmkText(c)))))));
 
+  const pdfHint = REWORK_META.pdf && PDF_URL
+    ? h("li", null, h("a", { href: `${PDF_URL}#page=${REWORK_META.pdf.page}`, target: "_blank", rel: "noopener" }, REWORK_META.pdf.label))
+    : null;
+
   root.append(
     h("div", { class: "page-head" },
-      h("h2", null, "Umrüstung – Vorbereitungsauftrag"),
-      h("p", { class: "note" },
-        "In der Anlage werden verschiedene Würfel sortiert. Start in Grundposition 10 (-BG13) mit eingefahrenen Zylindern -MM20 und -MM30. Das Magazin wird mit je einem Würfel aus Kunststoff ohne Bohrung, Metall mit Bohrung und Metall ohne Bohrung bestückt.")),
+      h("h2", null, REWORK_META.title),
+      h("p", { class: "note" }, REWORK_META.intro)),
     progress,
-    h("h3", { class: "sub" }, "Sollverhalten nach der Umrüstung"), target,
-    h("h3", { class: "sub" }, "Arbeitsschritte"),
+    ...(REWORK_TARGET.length ? [h("h3", { class: "sub" }, REWORK_META.targetTitle), target] : []),
+    h("h3", { class: "sub" }, REWORK_META.stepsTitle),
     h("ol", { class: "rw-list" }, REWORK_STEPS.map(step)),
-    h("h3", { class: "sub" }, "Hinweise"),
-    h("ul", { class: "rw-hints" }, REWORK_HINTS.map((t) => h("li", null, t)),
-      h("li", null, PDF_URL ? h("a", { href: `${PDF_URL}#page=1`, target: "_blank", rel: "noopener" }, "Änderungsmitteilung im PDF öffnen") : null)),
+    ...(REWORK_HINTS.length || pdfHint ? [h("h3", { class: "sub" }, REWORK_META.hintsTitle),
+      h("ul", { class: "rw-hints" }, REWORK_HINTS.map((t) => h("li", null, t)), pdfHint)] : []),
     h("div", { class: "page-tools noprint" },
       h("button", { type: "button", class: "btn", onClick: () => window.print() }, "⎙ Drucken / PDF"),
       h("button", { type: "button", class: "btn", onClick: () => {

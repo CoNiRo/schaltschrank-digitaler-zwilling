@@ -119,7 +119,7 @@ button.bmk-link:hover { background: var(--brand); color: #fff; }
 }
 @media (min-width: 900px) and (max-width: 1350px) { .brand-text span, .id-badge { display: none; } }
 
-/* ---------- Druck: Kopf mit Saint-Gobain-Logo auf jedem Dokument ---------- */
+/* ---------- Druck: Dokumentenkopf mit Logo auf jedem Dokument ---------- */
 .print-header { display: none; }
 @media print {
   @page { size: A4; margin: 14mm 12mm 16mm; }

@@ -1,17 +1,17 @@
 /* ==========================================================
- * style.css – Saint-Gobain-Design (hell, klar, Markenfarben)
- * Farben aus dem Logo; alles Zentrale steht in :root
+ * style.css – helles, neutrales Design
+ * Alle Farben stehen in :root, eigene Werte in css/theme.local.css
  * ========================================================== */
 :root {
-  /* Marke */
-  --brand: #254a9a;          /* Saint-Gobain Blau (Schriftzug) */
-  --brand-dark: #1a3677;
-  --brand-soft: #eaf0fb;
-  --teal: #54b6ae;
-  --sky: #42a0ce;
-  --red: #ed1741;
-  --orange: #f25c19;
-  --gradient: linear-gradient(90deg, #54b6ae 0%, #42a0ce 28%, #254a9a 50%, #ed1741 76%, #f25c19 100%);
+  /* Marke – neutrale Standardfarben (eigenes Schema: css/theme.local.css) */
+  --brand: #1f4e79;
+  --brand-dark: #163a5c;
+  --brand-soft: #e8f0f7;
+  --teal: #2a9d8f;
+  --sky: #4a90c2;
+  --red: #c8465a;
+  --orange: #e07a2f;
+  --gradient: linear-gradient(90deg, #2a9d8f 0%, #4a90c2 55%, #1f4e79 100%);
 
   /* Flächen und Text */
   --bg: #f3f5fa;
@@ -25,7 +25,7 @@
   --accent-soft: var(--brand-soft);
   --ok: #1f9d57;
   --bad: #d4143a;
-  --link: #1e5fc4;
+  --link: #1d6ba5;
   --radius: 12px;
   --shadow: 0 1px 2px rgba(20, 33, 61, .06), 0 4px 14px rgba(20, 33, 61, .05);
   --header-h: 64px;
@@ -36,7 +36,7 @@
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: "Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   display: flex;

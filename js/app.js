@@ -12,7 +12,7 @@
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
-  const HIGHLIGHT = [0.95, 0.36, 0.10, 1];   // Saint-Gobain Orange (#F25C19)
+  const HIGHLIGHT = BRAND.highlight;
 
   const app = $("#app");
   const viewer = $("#cabinet");
@@ -25,11 +25,27 @@
   const isDesktop = () => window.matchMedia("(min-width: 900px)").matches;
 
   /* ---------- Navigation (Tabs Desktop / Bottom-Nav Mobil) ---------- */
-  const PRINT_TITLES = {
-    twin: "Bauteilverzeichnis Schaltschrank", io: "Zuordnungsliste der Ein- und Ausgänge",
-    protocol: "Prüfprotokoll nach DIN VDE 0100-600 (Auszug)", rework: "Umrüstung – Checkliste Vorbereitungsauftrag",
-    grafcet: "GRAFCET – Ablaufplan der Bereitstellung",
-  };
+  /* ---------- Erscheinungsbild aus config.js ---------- */
+  function applyBranding() {
+    document.title = BRAND.pageTitle;
+    $("#brandName").textContent = BRAND.name;
+    $("#brandSub").textContent = BRAND.subtitle || "";
+    const badge = $("#brandBadge");
+    badge.textContent = BRAND.badge || "";
+    badge.hidden = !BRAND.badge;
+    $("#phOrgTitle").textContent = BRAND.docOrgTitle;
+    $("#phOrgLine").textContent = BRAND.docOrgLine;
+    $("#phMeta").textContent = BRAND.docMeta;
+    $$(".js-logo").forEach((img) => {
+      if (BRAND.logo) { img.src = BRAND.logo; img.alt = BRAND.logoAlt || ""; } else img.hidden = true;
+    });
+    if (BRAND.logo) $("#favicon").href = BRAND.logo;
+    viewer.setAttribute("src", BRAND.model);
+    const layoutOk = typeof LAYOUT_PAGE !== "undefined" && LAYOUT_PAGE && PDF_URL;
+    $("#layoutNote").hidden = !layoutOk;
+    if (layoutOk) $("#linkLayout").textContent = `Seite ${LAYOUT_PAGE}`;
+  }
+
   const setPrintDate = () => { $("#printDate").textContent = new Date().toLocaleDateString("de-DE"); };
   window.addEventListener("beforeprint", setPrintDate);
   setPrintDate();
@@ -39,7 +55,7 @@
     app.dataset.view = view;
     if (view === "twin") app.dataset.pane = target === "list" ? "list" : "3d";
     Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== view; });
-    $("#printTitle").textContent = PRINT_TITLES[view];
+    $("#printTitle").textContent = VIEW_TITLES[view];
     $$(".tab").forEach((b) => {
       const t = b.dataset.go === "3d" ? "twin" : b.dataset.go;
       b.classList.toggle("is-active", t === view);
@@ -140,12 +156,12 @@
       });
       const links = document.createElement("div");
       links.className = "links";
-      c.blatt.forEach((n) => {
+      (PDF_URL ? c.blatt : []).forEach((n) => {
         const a = document.createElement("a");
         a.className = "schema-link";
         a.textContent = `E-Plan Blatt ${n}`;
         a.target = "_blank"; a.rel = "noopener";
-        a.href = PDF_URL ? pdfLink(BLATT_TO_SEITE(n)) : "#";
+        a.href = pdfLink(BLATT_TO_SEITE(n));
         links.appendChild(a);
       });
       body.append(dl, links);
@@ -199,7 +215,7 @@
 
   $("#linkLayout").addEventListener("click", (e) => {
     e.preventDefault();
-    if (PDF_URL) window.open(pdfLink(28), "_blank", "noopener");
+    if (PDF_URL && LAYOUT_PAGE) window.open(pdfLink(LAYOUT_PAGE), "_blank", "noopener");
   });
 
   /* ---------- Ladezustand des Modells ---------- */
@@ -288,7 +304,7 @@
   $("#btnCsv").addEventListener("click", () => {
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = [
-      esc("Saint-Gobain Glaswerk Torgau – Überbetriebliche Ausbildungsstätte"),
+      esc(BRAND.csvHeader),
       esc("Zuordnungsliste der Ein- und Ausgänge – Stand " + new Date().toLocaleDateString("de-DE")),
       "",
       ["Operand", "Eigener Operand", "BMK", "Funktion"].map(esc).join(";"),
@@ -313,6 +329,7 @@
   $("#brandLink").addEventListener("click", (e) => { e.preventDefault(); go("3d"); });
 
   /* ---------- Start ---------- */
+  applyBranding();
   renderChips();
   renderCards();
   renderIo();
