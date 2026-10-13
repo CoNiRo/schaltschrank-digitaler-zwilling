@@ -91,7 +91,8 @@
   root.append(h("div", { class: "page-head" },
       h("h2", null, "GRAFCET – Ablaufplan der Bereitstellung"),
       h("p", { class: "note" }, "Pläne von Seite 43–47. Das GRAFCET des Vorbereitungsauftrags (Seite 55/56) ist die Prüfungsaufgabe und deshalb nicht vorausgefüllt."),
-      tabs),
+      tabs,
+      h("div", { class: "page-tools noprint" }, h("button", { type: "button", class: "btn", onClick: () => window.print() }, "⎙ Aktuellen Plan drucken / PDF"))),
     body);
   draw();
 })();

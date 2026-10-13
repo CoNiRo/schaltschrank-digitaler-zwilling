@@ -3,25 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Digitaler Zwilling – Schaltschrank Mechatroniker AP2</title>
+  <title>Digitaler Schaltschrank – Saint-Gobain Ausbildung Torgau</title>
+  <link rel="icon" type="image/png" href="assets/logo-saint-gobain.png">
+  <!-- Schrift (optional, ohne Internet greift die Systemschrift) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap">
   <!-- Google model-viewer (für ein Offline-Projekt die Datei lokal ablegen und hier verlinken) -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/views.css">
 </head>
 <body>
 
   <!-- Kopfzeile -->
+  <!-- Kopfzeile mit Logo -->
   <header class="app-header">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <h1>Digitaler Schaltschrank <small>// IHK AP2 Winter 2025/26</small></h1>
-    </div>
+    <a class="brand" href="#" id="brandLink" aria-label="Zur Startansicht">
+      <img class="brand-logo" src="assets/logo-saint-gobain.png" alt="Saint-Gobain">
+      <span class="brand-text">
+        <strong>Digitaler Schaltschrank</strong>
+        <span>Überbetriebliche Ausbildungsstätte · Glaswerk Torgau</span>
+      </span>
+    </a>
     <nav class="desktop-tabs" aria-label="Ansicht">
       <button class="tab is-active" data-go="3d">Digitaler Zwilling</button>
       <button class="tab" data-go="io">E/A-Zuordnung</button>
+      <button class="tab" data-go="protocol">Prüfprotokoll</button>
+      <button class="tab" data-go="rework">Umrüstung</button>
+      <button class="tab" data-go="grafcet">GRAFCET</button>
     </nav>
-    <span class="id-badge">ID: 0942-HMI</span>
+    <span class="id-badge">Mechatroniker/-in · AP2 W25/26</span>
   </header>
+
+  <!-- Dokumentenkopf: erscheint nur im Ausdruck / PDF (Logo auf allen Dokumenten) -->
+  <div class="print-header" aria-hidden="true">
+    <div class="ph-row">
+      <img src="assets/logo-saint-gobain.png" alt="Saint-Gobain">
+      <div class="ph-org"><strong>Überbetriebliche Ausbildungsstätte</strong><br>Saint-Gobain Glaswerk Torgau</div>
+    </div>
+    <div class="ph-bar"></div>
+    <h1 id="printTitle">Dokument</h1>
+    <div class="ph-meta">Mechatroniker/-in · Abschlussprüfung Teil 2 · Winter 2025/26 · Stand: <span id="printDate"></span></div>
+  </div>
 
   <main id="app" data-view="twin" data-pane="3d">
 
@@ -35,6 +58,7 @@
         </model-viewer>
 
         <div class="loader" id="loader" role="status">
+          <img src="assets/logo-saint-gobain.png" alt="Saint-Gobain">
           <div class="loader-bar"><span id="loaderFill"></span></div>
           <p id="loaderText">3D-Modell wird geladen …</p>
         </div>
@@ -71,6 +95,7 @@
             <button class="seg-btn" data-f="out">Ausgänge</button>
           </div>
           <button class="btn" id="btnCsv" type="button">⇩ CSV exportieren</button>
+          <button class="btn" id="btnIoPrint" type="button">⎙ Drucken / PDF</button>
         </div>
         <p class="io-note">Trage in der Spalte „Eigener Operand“ deine systembezogenen Adressen ein (z. B. E 0.0). Die Eingaben bleiben in diesem Browser gespeichert.</p>
       </div>
@@ -81,16 +106,32 @@
         </table>
       </div>
     </section>
+
+    <!-- ===== Ansicht 3: Prüfprotokoll (wird von js/protocol.js gefüllt) ===== -->
+    <section id="pane-protocol" class="page" hidden></section>
+
+    <!-- ===== Ansicht 4: Umrüstung / Vorbereitungsauftrag (js/rework.js) ===== -->
+    <section id="pane-rework" class="page" hidden></section>
+
+    <!-- ===== Ansicht 5: GRAFCET (js/grafcet.js) ===== -->
+    <section id="pane-grafcet" class="page" hidden></section>
   </main>
 
   <!-- Navigation für Smartphones -->
   <nav class="bottom-nav" aria-label="Ansicht">
     <button class="bn is-active" data-go="3d"><span>◧</span>3D-Modell</button>
     <button class="bn" data-go="list"><span>☰</span>Bauteile</button>
-    <button class="bn" data-go="io"><span>⇄</span>E/A-Liste</button>
+    <button class="bn" data-go="io"><span>⇄</span>E/A</button>
+    <button class="bn" data-go="protocol"><span>✓</span>Protokoll</button>
+    <button class="bn" data-go="rework"><span>⚙</span>Umrüstung</button>
+    <button class="bn" data-go="grafcet"><span>⎇</span>GRAFCET</button>
   </nav>
 
+  <script src="js/util.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/protocol.js"></script>
+  <script src="js/rework.js"></script>
+  <script src="js/grafcet.js"></script>
 </body>
 </html>

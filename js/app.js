@@ -12,7 +12,7 @@
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
-  const HIGHLIGHT = [0.97, 0.45, 0.09, 1];
+  const HIGHLIGHT = [0.95, 0.36, 0.10, 1];   // Saint-Gobain Orange (#F25C19)
 
   const app = $("#app");
   const viewer = $("#cabinet");
@@ -25,12 +25,21 @@
   const isDesktop = () => window.matchMedia("(min-width: 900px)").matches;
 
   /* ---------- Navigation (Tabs Desktop / Bottom-Nav Mobil) ---------- */
+  const PRINT_TITLES = {
+    twin: "Bauteilverzeichnis Schaltschrank", io: "Zuordnungsliste der Ein- und Ausgänge",
+    protocol: "Prüfprotokoll nach DIN VDE 0100-600 (Auszug)", rework: "Umrüstung – Checkliste Vorbereitungsauftrag",
+    grafcet: "GRAFCET – Ablaufplan der Bereitstellung",
+  };
+  const setPrintDate = () => { $("#printDate").textContent = new Date().toLocaleDateString("de-DE"); };
+  window.addEventListener("beforeprint", setPrintDate);
+  setPrintDate();
   const VIEWS = { twin: "#pane-twin", io: "#pane-io", protocol: "#pane-protocol", rework: "#pane-rework", grafcet: "#pane-grafcet" };
   function go(target) {
     const view = ["io", "protocol", "rework", "grafcet"].includes(target) ? target : "twin";
     app.dataset.view = view;
     if (view === "twin") app.dataset.pane = target === "list" ? "list" : "3d";
     Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== view; });
+    $("#printTitle").textContent = PRINT_TITLES[view];
     $$(".tab").forEach((b) => {
       const t = b.dataset.go === "3d" ? "twin" : b.dataset.go;
       b.classList.toggle("is-active", t === view);
@@ -278,7 +287,12 @@
 
   $("#btnCsv").addEventListener("click", () => {
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const lines = [["Operand", "Eigener Operand", "BMK", "Funktion"].map(esc).join(";")];
+    const lines = [
+      esc("Saint-Gobain Glaswerk Torgau – Überbetriebliche Ausbildungsstätte"),
+      esc("Zuordnungsliste der Ein- und Ausgänge – Stand " + new Date().toLocaleDateString("de-DE")),
+      "",
+      ["Operand", "Eigener Operand", "BMK", "Funktion"].map(esc).join(";"),
+    ];
     ioRows.forEach((r) => lines.push([r.op, operands[r.op] || "", r.bmk, r.fn].map(esc).join(";")));
     const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
@@ -294,6 +308,9 @@
     // aus anderen Ansichten ins 3D-Modell springen und Bauteile markieren
     reveal(comps) { go("3d"); selectMany(comps.filter(Boolean)); },
   };
+
+  $("#btnIoPrint").addEventListener("click", () => window.print());
+  $("#brandLink").addEventListener("click", (e) => { e.preventDefault(); go("3d"); });
 
   /* ---------- Start ---------- */
   renderChips();

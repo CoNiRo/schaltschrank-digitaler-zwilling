@@ -55,6 +55,7 @@
     h("ul", { class: "rw-hints" }, REWORK_HINTS.map((t) => h("li", null, t)),
       h("li", null, PDF_URL ? h("a", { href: `${PDF_URL}#page=1`, target: "_blank", rel: "noopener" }, "Änderungsmitteilung im PDF öffnen") : null)),
     h("div", { class: "page-tools noprint" },
+      h("button", { type: "button", class: "btn", onClick: () => window.print() }, "⎙ Drucken / PDF"),
       h("button", { type: "button", class: "btn", onClick: () => {
         if (confirm("Alle Häkchen zurücksetzen?")) { done = {}; store.remove(KEY); root.querySelectorAll(".rw-step").forEach((li) => { li.classList.remove("is-done"); li.querySelector("input").checked = false; }); refresh(); }
       } }, "Checkliste zurücksetzen")));
