@@ -16,8 +16,11 @@
 
   (async () => {
     await load("js/util.js");
+    await load("js/qr.js");
+    await load("js/glb-inspect.js");
     if (!(await load("js/config.local.js"))) await load("js/config.js");
     if (!(await load("js/data.local.js"))) await load("js/data.js");
-    for (const f of ["js/app.js", "js/protocol.js", "js/rework.js", "js/grafcet.js"]) await load(f);
+    if (!(await load("js/focus.local.js"))) await load("js/focus.js");
+    for (const f of ["js/app.js", "js/protocol.js", "js/rework.js", "js/grafcet.js", "js/model.js", "js/qrview.js"]) await load(f);
   })();
 })();

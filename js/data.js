@@ -17,6 +17,8 @@ const VIEW_TITLES = {
   protocol: "Prüfprotokoll",
   rework: "Umbau – Checkliste",
   grafcet: "GRAFCET – Beispielablauf",
+  model: "Modell-Prüfbericht (CAx)",
+  qr: "QR-Etiketten für Bauteile",
 };
 
 const CATEGORIES = [

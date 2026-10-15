@@ -104,6 +104,48 @@ button.bmk-link:hover { background: var(--brand); color: #fff; }
 .gc-trail .past button { color: var(--text); }
 .gc-body { margin-top: 6px; }
 
+
+/* ---------- Modell-Check ---------- */
+.kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px auto; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--sky); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+.kpi-v { font-size: 1.35rem; font-weight: 800; color: var(--brand); }
+.kpi-l { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
+.kpi small { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+.table-wrap { overflow-x: auto; margin: 0 auto 10px; border-radius: var(--radius); box-shadow: var(--shadow); background: #fff; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 560px; }
+.data-table th { text-align: left; background: var(--brand); color: #fff; font-size: .7rem; text-transform: uppercase; letter-spacing: .6px; padding: 9px 10px; }
+.data-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.data-table td.op { font-family: "Courier New", monospace; font-weight: 700; color: var(--brand); }
+.st { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: .74rem; font-weight: 700; }
+.st-ok { background: rgba(31,157,87,.14); color: var(--ok); }
+.st-warn { background: rgba(212,20,58,.12); color: var(--bad); }
+.st-info { background: var(--brand-soft); color: var(--brand); }
+.st-muted { background: #eef0f4; color: var(--muted); }
+.note .bmk { margin-right: 4px; }
+
+/* ---------- QR-Etiketten ---------- */
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin: 14px auto; }
+.qr-card { margin: 0; background: #fff; border: 1.5px dashed #b6c0d4; border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; break-inside: avoid; }
+.qr-code { width: 100%; max-width: 170px; }
+.qr-code svg { width: 100%; height: auto; display: block; }
+.qr-card figcaption { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: .82rem; }
+.qr-bmk { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.qr-card small { font-size: .6rem; color: var(--muted); overflow-wrap: anywhere; }
+.copy-link { background: #fff; cursor: pointer; }
+
+.bn { flex: 1 0 62px; }
+@media (min-width: 640px) { .kpi-grid { grid-template-columns: repeat(5, 1fr); } }
+@media print {
+  .kpi-grid { grid-template-columns: repeat(5, 1fr); }
+  .table-wrap { box-shadow: none; overflow: visible; }
+  .data-table { min-width: 0; font-size: 8.5pt; }
+  .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 6mm; }
+  .qr-card { border: 1px dashed #777; padding: 4mm; }
+  .qr-card small { font-size: 6pt; color: #333; }
+  #pane-qr .pf, #pane-qr .note { display: none !important; }
+  .st { border: 1px solid #777; background: #fff !important; color: #000 !important; }
+}
+
 /* ---------- Anpassungen ---------- */
 #app[data-view="protocol"] .page, #app[data-view="rework"] .page, #app[data-view="grafcet"] .page { display: block; }
 
@@ -115,9 +157,10 @@ button.bmk-link:hover { background: var(--brand); color: #fff; }
 }
 @media (min-width: 900px) {
   .page { padding: 20px 28px; }
-  .desktop-tabs .tab { padding: 7px 11px; font-size: .8rem; }
+  .desktop-tabs .tab { padding: 7px 10px; font-size: .8rem; white-space: nowrap; }
 }
-@media (min-width: 900px) and (max-width: 1350px) { .brand-text span, .id-badge { display: none; } }
+@media (min-width: 900px) and (max-width: 1550px) { .brand-text span, .id-badge { display: none; } }
+@media (min-width: 900px) and (max-width: 1150px) { .desktop-tabs { overflow-x: auto; max-width: 62vw; } }
 
 /* ---------- Druck: Dokumentenkopf mit Logo auf jedem Dokument ---------- */
 .print-header { display: none; }
@@ -154,3 +197,37 @@ button.bmk-link:hover { background: var(--brand); color: #fff; }
   .good, .bad { color: #000; }
   .rw-step, .card { box-shadow: none; }
 }
+
+/* ---------- Verdrahtung im 3D-Fenster ---------- */
+.wire-panel { position: absolute; right: 14px; top: 14px; z-index: 5; display: grid; gap: 8px; max-width: min(360px, calc(100% - 28px)); pointer-events: none; justify-items: end; }
+.wire-info, .wire-legend { margin: 0; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.94); border: 1px solid var(--line, #d6d9de); box-shadow: 0 2px 8px rgba(0,0,0,.12); font-size: .82rem; line-height: 1.35; }
+.wire-legend { display: grid; gap: 3px; }
+.wire-legend .wl { display: flex; align-items: center; gap: 8px; }
+.wire-legend .wl i { flex: none; width: 22px; height: 6px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
+#btnWire[aria-pressed="true"] { background: var(--accent, #e85d1a); color: #fff; border-color: transparent; }
+@media print { .wire-panel, #btnWire, #btnWireCsv { display: none !important; } }
+#btnSwitch[aria-pressed="true"] { border-color: #2e9e5b; color: #1c7a43; }
+#btnSwitch[aria-pressed="false"] { border-color: #c0392b; color: #c0392b; }
+@media print { #btnSwitch { display: none !important; } }
+
+/* Leitungs-Legende als Dropdown (laesst sich hoch-/runterschieben) */
+.wire-info { pointer-events: auto; cursor: pointer; justify-self: stretch; }
+.wire-toggle { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line, #d6d9de); background: rgba(255,255,255,.94); box-shadow: 0 2px 8px rgba(0,0,0,.12); font: inherit; font-size: .82rem; font-weight: 600; color: inherit; cursor: pointer; }
+.wire-toggle[hidden] { display: none; }
+.wire-toggle .chev { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-135deg) translate(-2px,-2px); transition: transform .25s ease; }
+.wire-panel.is-collapsed .wire-toggle .chev { transform: rotate(45deg) translate(-2px,-2px); }
+.wire-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .28s ease, opacity .2s ease; justify-self: stretch; }
+.wire-fold > .wire-legend { overflow: hidden; min-height: 0; pointer-events: auto; max-height: 45vh; overflow-y: auto; }
+.wire-panel.is-collapsed .wire-fold { grid-template-rows: 0fr; opacity: 0; }
+.wire-panel.is-collapsed .wire-fold > .wire-legend { padding-top: 0; padding-bottom: 0; border-width: 0; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .wire-fold, .wire-toggle .chev { transition: none; } }
+.card.is-missing .show-link { display: none; }
+@media print { .show-link { display: none !important; } }
+.wire-legend[hidden], .wire-info[hidden] { display: none; }
+
+/* Kurzbeschreibung beim Ueberfahren / ersten Antippen */
+.tip { position: absolute; z-index: 6; pointer-events: none; display: grid; gap: 2px; max-width: min(260px, calc(100% - 12px)); padding: 7px 10px; border-radius: 8px; background: rgba(20,28,40,.93); color: #fff; box-shadow: 0 3px 12px rgba(0,0,0,.3); font-size: .85rem; line-height: 1.3; }
+.tip[hidden] { display: none; }
+.tip-bmk { font-weight: 700; font-size: .8rem; letter-spacing: .02em; color: #ffb27a; }
+.tip-hint { margin-top: 2px; font-size: .72rem; opacity: .75; }
+@media print { .tip { display: none !important; } }

@@ -13,9 +13,12 @@ Dieses Repository enthält eine **neutrale Beispielversion** mit eigenem Demo-Mo
 | **Prüfprotokoll** | Protokoll angelehnt an DIN VDE 0100-600 mit Bewertung OK / nicht OK, Messwerten und Fortschrittsanzeige. Zwei getrennte Protokolle (Vorprüfung, Inbetriebnahme). |
 | **Umbau** | Abhakbare Checkliste für Umbauarbeiten mit Sprung zu betroffenen Bauteilen. |
 | **GRAFCET** | Beispielablauf als Liste und Schritt-Simulation. |
+| **Modell-Check** | Liest das GLB aus und zeigt Größe, Anzahl der Teile, Materialien und Dreiecke, prüft die Benennung nach BMK und ob jedes Bauteil aus dem Verzeichnis im Modell verknüpft ist. Erzeugt eine Stückliste (CSV), einen druckbaren Prüfbericht und eine Messreihe für Vorher-Nachher-Vergleiche. |
+| **QR-Codes** | Erzeugt druckbare QR-Etiketten für jedes Bauteil. Der Code öffnet die Seite direkt beim passenden Bauteil. |
 
 Weiteres:
 
+- Direktlinks zu Bauteilen, zum Beispiel `index.html#/bauteil/ke1`, auch mit dem BMK (`#/bauteil/-KE1`). Auf jeder Karte gibt es einen Knopf „Link kopieren“.
 - Mobile-First-Layout mit unterer Navigation auf dem Smartphone
 - Eingaben bleiben im Browser (`localStorage`), es gibt keinen Server und kein Backend
 - Druckansicht mit Dokumentenkopf, alle Dokumente lassen sich als PDF speichern
@@ -50,6 +53,10 @@ Danach `http://localhost:8000` öffnen. Alternativ die VS-Code-Erweiterung *Live
 │   ├── config.js         Name, Logo, Modellpfad, Hervorhebungsfarbe
 │   ├── data.js           Bauteile, E/A-Listen, Protokoll, Checkliste, GRAFCET
 │   ├── util.js           Hilfsfunktionen
+│   ├── qr.js             eigener QR-Code-Generator (ohne Bibliothek)
+│   ├── glb-inspect.js    liest die Struktur einer GLB-Datei
+│   ├── model.js          Modell-Check, Stückliste, Messreihe
+│   ├── qrview.js         QR-Etiketten
 │   ├── app.js            3D-Verknüpfung, Karten, Filter, CSV, Ansichtswechsel
 │   ├── protocol.js       Prüfprotokoll
 │   ├── rework.js         Umbau-Checkliste
@@ -81,11 +88,18 @@ Danach `http://localhost:8000` öffnen. Alternativ die VS-Code-Erweiterung *Live
 Die Verknüpfung funktioniert über Namen: Jedes Material im GLB muss genau so heißen wie das Betriebsmittelkennzeichen (BMK, z. B. `-QA2`).
 
 1. In der CAD-Software jede Baugruppe mit dem BMK benennen.
-2. Als GLB exportieren und in `assets/` ablegen, den Pfad in `js/config.js` (`model`) eintragen.
+2. Als GLB exportieren und in `assets/` ablegen, den Pfad in `js/config.js` (`model`) eintragen. Optional lässt sich unter `modelWired` ein zweites GLB mit Leitungen eintragen. Dann erscheint im 3D-Fenster der Schalter „Verdrahtung“; Enthält das GLB die Animation `QB1_Schalten`, erscheint zusätzlich der Knopf „Hauptschalter“ (Stellung des Griffs im Modell in `mainSwitchInModel`). Leitungen heißen im Modell `_Leitung_<Nr>|<Netz>|<Typ>|<von>|<nach>`.
+3. Zoom auf Bauteile: `python3 tools/make_focus.py assets/dein-modell.glb js/focus.js` erzeugt die Tabelle (Mittelpunkt/Radius je Bauteil, Schlüssel = Materialname vor `|`). Auf dem Smartphone springt ein Tipp auf eine Bauteil-Karte damit direkt ins 3D-Modell und zoomt heran; auf allen Geräten gibt es in der Karte den Knopf „Im 3D-Modell zeigen“. Die Leitungs-Legende ist ein Dropdown (mobil zunächst eingeklappt).
 3. Gleichfarbige Bauteile teilen sich beim Export oft ein Material. Dann färbt die Hervorhebung fremde Teile mit. Jede Baugruppe braucht ein eigenes Material, dessen Name dem BMK entspricht.
 4. Das BMK in `js/data.js` unter `bmk: [...]` eintragen.
 
 Bauteile ohne Material im Modell werden in der Liste automatisch mit „nicht im 3D-Modell“ markiert.
+
+**Modell-Check nutzen:** Der Reiter „Modell-Check“ zeigt für jedes Bauteil, ob Baugruppe und Material zum BMK passen. Knoten und Materialien, die bewusst nicht anklickbar sein sollen (Gehäuse, Tragschienen), benennst du mit einem Unterstrich am Anfang, zum Beispiel `_Gehaeuse`. Sie werden dann nicht als „ohne BMK“ gemeldet.
+
+## QR-Codes für den Schaltschrank
+
+Im Reiter „QR-Codes“ trägst du die Adresse ein, unter der die Seite im Netzwerk erreichbar ist (nicht `localhost`, sondern z. B. die IP-Adresse oder der Servername). Danach druckst du die Etiketten. Ein Scan öffnet das Bauteil mit Beschreibung und Markierung im 3D-Modell. Der QR-Generator läuft komplett im Browser, es werden keine Daten an Dienste gesendet.
 
 ## Private Dateien lokal ergänzen
 
@@ -122,3 +136,6 @@ Dieser Abschnitt ist keine Rechtsberatung.
 ## Autor
 
 [Name], [Ausbildungsjahr]
+
+
+**Bedienung:** Am PC zeigt das Überfahren eines Bauteils eine Kurzbeschreibung (Kennzeichen und Name). Am Smartphone öffnet der erste Tipp die Kurzbeschreibung, der zweite springt zur Bauteilliste.

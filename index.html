@@ -30,6 +30,8 @@
       <button class="tab" data-go="protocol">Prüfprotokoll</button>
       <button class="tab" data-go="rework">Umrüstung</button>
       <button class="tab" data-go="grafcet">GRAFCET</button>
+      <button class="tab" data-go="model">Modell-Check</button>
+      <button class="tab" data-go="qr">QR-Codes</button>
     </nav>
     <span class="id-badge" id="brandBadge"></span>
   </header>
@@ -64,8 +66,19 @@
         <div class="toolbar">
           <button class="btn" id="btnReset" type="button">↺ Ansicht zurücksetzen</button>
           <button class="btn" id="btnClear" type="button">✕ Auswahl aufheben</button>
+          <button class="btn" id="btnWire" type="button" aria-pressed="false" hidden title="Leitungen nach Stromlaufplan ein- oder ausblenden">⌁ Verdrahtung</button>
+          <button class="btn" id="btnWireCsv" type="button" hidden>⇩ Leitungsliste</button>
+          <button class="btn" id="btnSwitch" type="button" aria-pressed="true" hidden title="Hauptschalter -QB1 umlegen (Klick auf den Griff im Modell geht auch)">⏻ Hauptschalter: EIN</button>
         </div>
-        <p class="hint">Bauteil im Modell antippen, um die Beschreibung zu öffnen.</p>
+        <div class="wire-panel" id="wirePanel">
+          <p id="wireInfo" class="wire-info" hidden title="Antippen zum Ausblenden"></p>
+          <button type="button" id="wireToggle" class="wire-toggle" aria-expanded="false" aria-controls="wireLegend" hidden>
+            <span id="wireToggleText">Leitungsfarben</span><i class="chev" aria-hidden="true"></i>
+          </button>
+          <div class="wire-fold"><div id="wireLegend" class="wire-legend" hidden></div></div>
+        </div>
+        <div class="tip" id="tip" role="status" hidden></div>
+        <p class="hint">Bauteil im Modell antippen, um die Beschreibung zu öffnen – in der Liste „Im 3D-Modell zeigen“ tippen, um heranzuzoomen.</p>
       </div>
 
       <aside class="side" id="paneList" aria-label="Komponentenverzeichnis">
@@ -113,6 +126,12 @@
 
     <!-- ===== Ansicht 5: GRAFCET (js/grafcet.js) ===== -->
     <section id="pane-grafcet" class="page" hidden></section>
+
+    <!-- ===== Ansicht 6: Modell-Check (js/model.js) ===== -->
+    <section id="pane-model" class="page" hidden></section>
+
+    <!-- ===== Ansicht 7: QR-Etiketten (js/qrview.js) ===== -->
+    <section id="pane-qr" class="page" hidden></section>
   </main>
 
   <!-- Navigation für Smartphones -->
@@ -123,6 +142,8 @@
     <button class="bn" data-go="protocol"><span>✓</span>Protokoll</button>
     <button class="bn" data-go="rework"><span>⚙</span>Umrüstung</button>
     <button class="bn" data-go="grafcet"><span>⎇</span>GRAFCET</button>
+    <button class="bn" data-go="model"><span>◈</span>Modell</button>
+    <button class="bn" data-go="qr"><span>▦</span>QR</button>
   </nav>
 
   <script src="js/boot.js"></script>

@@ -18,5 +18,7 @@ const BRAND = {
   csvHeader: "Ausbildungsprojekt – Digitaler Schaltschrank",
 
   model: "assets/demo-schaltschrank.glb", // 3D-Modell (GLB)
+  // Optional: Hauptschalter-Animation "QB1_Schalten" im GLB. mainSwitchInModel = Stellung des Griffs im Modell ("ein" oder "aus")
+  mainSwitchInModel: "aus",
   highlight: [0.88, 0.48, 0.18, 1],       // Hervorhebung im Modell (RGBA, 0–1)
 };
