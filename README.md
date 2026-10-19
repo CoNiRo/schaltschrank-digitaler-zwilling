@@ -9,15 +9,15 @@ Dieses Repository enthält eine **neutrale Beispielversion** mit eigenem Demo-Mo
 | Ansicht | Inhalt |
 |---|---|
 | **Digitaler Zwilling** | 3D-Modell mit Bauteilverzeichnis, Suche und Kategorie-Filter. Klick im Modell öffnet die Beschreibung, Klick auf eine Karte hebt das Bauteil hervor. |
-| **E/A-Zuordnung** | Zuordnungsliste der Ein- und Ausgänge mit Suche und Filter. Eigene Operanden lassen sich eintragen und als CSV exportieren. |
+| **E/A-Zuordnung** | Zuordnungsliste der Ein- und Ausgänge mit Suche und Filter. Mit „Bearbeiten“ lassen sich Operand, BMK und Funktion ändern, Zeilen hinzufügen und löschen. Eigene Operanden und CSV-Export sind möglich. |
 | **Prüfprotokoll** | Protokoll angelehnt an DIN VDE 0100-600 mit Bewertung OK / nicht OK, Messwerten und Fortschrittsanzeige. Zwei getrennte Protokolle (Vorprüfung, Inbetriebnahme). |
-| **Umbau** | Abhakbare Checkliste für Umbauarbeiten mit Sprung zu betroffenen Bauteilen. |
-| **GRAFCET** | Beispielablauf als Liste und Schritt-Simulation. |
-| **Modell-Check** | Liest das GLB aus und zeigt Größe, Anzahl der Teile, Materialien und Dreiecke, prüft die Benennung nach BMK und ob jedes Bauteil aus dem Verzeichnis im Modell verknüpft ist. Erzeugt eine Stückliste (CSV), einen druckbaren Prüfbericht und eine Messreihe für Vorher-Nachher-Vergleiche. |
+| **Umbau** | Abhakbare Checkliste mit Sprung zu betroffenen Bauteilen. Mit „Bearbeiten“ lassen sich Aufgabe, Sollverhalten, Schritte und Hinweise für eine neue Prüfung ändern. |
 | **QR-Codes** | Erzeugt druckbare QR-Etiketten für jedes Bauteil. Der Code öffnet die Seite direkt beim passenden Bauteil. |
 
 Weiteres:
 
+- **Bauteile abwählen:** Im Bauteilverzeichnis lässt sich pro Karte der Schalter „verbaut“ ausschalten. Nicht benötigte Bauteile erscheinen im 3D-Modell grau oder ausgeblendet (Auswahl unter „Bauteile auswählen“). Zugehörige Leitungen folgen.
+- **Prüfungsprofil:** Das Menü „Prüfung“ oben rechts speichert E/A-Liste, Umrüstungsplan und Bauteilauswahl als Datei (JSON) und lädt sie wieder. So lässt sich die Seite für jede Prüfung neu einrichten.
 - Direktlinks zu Bauteilen, zum Beispiel `index.html#/bauteil/ke1`, auch mit dem BMK (`#/bauteil/-KE1`). Auf jeder Karte gibt es einen Knopf „Link kopieren“.
 - Mobile-First-Layout mit unterer Navigation auf dem Smartphone
 - Eingaben bleiben im Browser (`localStorage`), es gibt keinen Server und kein Backend
@@ -47,20 +47,18 @@ Danach `http://localhost:8000` öffnen. Alternativ die VS-Code-Erweiterung *Live
 ├── index.html            Seitengerüst
 ├── css/
 │   ├── style.css         Grunddesign, Farben in :root
-│   └── views.css         Protokoll, Umbau, GRAFCET, Druckansicht
+│   └── views.css         Protokoll, Umbau, Druckansicht
 ├── js/
 │   ├── boot.js           lädt die Skripte, bevorzugt *.local.js
 │   ├── config.js         Name, Logo, Modellpfad, Hervorhebungsfarbe
-│   ├── data.js           Bauteile, E/A-Listen, Protokoll, Checkliste, GRAFCET
+│   ├── data.js           Bauteile, E/A-Listen, Protokoll, Checkliste
 │   ├── util.js           Hilfsfunktionen
 │   ├── qr.js             eigener QR-Code-Generator (ohne Bibliothek)
-│   ├── glb-inspect.js    liest die Struktur einer GLB-Datei
-│   ├── model.js          Modell-Check, Stückliste, Messreihe
 │   ├── qrview.js         QR-Etiketten
 │   ├── app.js            3D-Verknüpfung, Karten, Filter, CSV, Ansichtswechsel
 │   ├── protocol.js       Prüfprotokoll
-│   ├── rework.js         Umbau-Checkliste
-│   └── grafcet.js        GRAFCET-Pläne und Simulation
+│   ├── profile.js        Prüfungsprofil (Speichern, Export, Import)
+│   └── rework.js         Umbau-Checkliste, bearbeitbar
 └── assets/
     ├── demo-schaltschrank.glb   eigenes, vereinfachtes Demo-Modell
     └── logo-placeholder.svg     Platzhalter-Logo
@@ -95,7 +93,16 @@ Die Verknüpfung funktioniert über Namen: Jedes Material im GLB muss genau so h
 
 Bauteile ohne Material im Modell werden in der Liste automatisch mit „nicht im 3D-Modell“ markiert.
 
-**Modell-Check nutzen:** Der Reiter „Modell-Check“ zeigt für jedes Bauteil, ob Baugruppe und Material zum BMK passen. Knoten und Materialien, die bewusst nicht anklickbar sein sollen (Gehäuse, Tragschienen), benennst du mit einem Unterstrich am Anfang, zum Beispiel `_Gehaeuse`. Sie werden dann nicht als „ohne BMK“ gemeldet.
+**Gehäuse und Tragschienen:** Knoten und Materialien, die nicht anklickbar sein sollen, benennst du mit einem Unterstrich am Anfang, zum Beispiel `_Gehaeuse`.
+
+## Für eine neue Prüfung anpassen
+
+1. Bauteile, die im Schaltschrank nicht gebraucht werden, im Bauteilverzeichnis abwählen.
+2. Im Reiter „E/A-Zuordnung“ auf „Bearbeiten“ klicken und Operand, BMK und Funktion eintragen.
+3. Im Reiter „Umrüstung“ auf „Bearbeiten“ klicken und Aufgabe, Sollverhalten, Schritte und Hinweise ändern.
+4. Im Menü „Prüfung“ das Profil exportieren. Die Datei lässt sich später wieder laden.
+
+Die Anpassungen liegen im Browser (`localStorage`). Die Startwerte für ein frisches Profil stehen in `js/data.js`.
 
 ## QR-Codes für den Schaltschrank
 

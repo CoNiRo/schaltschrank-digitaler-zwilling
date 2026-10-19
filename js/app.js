@@ -61,9 +61,9 @@
   const setPrintDate = () => { $("#printDate").textContent = new Date().toLocaleDateString("de-DE"); };
   window.addEventListener("beforeprint", setPrintDate);
   setPrintDate();
-  const VIEWS = { twin: "#pane-twin", io: "#pane-io", protocol: "#pane-protocol", rework: "#pane-rework", grafcet: "#pane-grafcet", model: "#pane-model", qr: "#pane-qr" };
+  const VIEWS = { twin: "#pane-twin", io: "#pane-io", protocol: "#pane-protocol", rework: "#pane-rework", qr: "#pane-qr" };
   function go(target) {
-    const view = ["io", "protocol", "rework", "grafcet", "model", "qr"].includes(target) ? target : "twin";
+    const view = ["io", "protocol", "rework", "qr"].includes(target) ? target : "twin";
     app.dataset.view = view;
     if (view === "twin") app.dataset.pane = target === "list" ? "list" : "3d";
     Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== view; });
@@ -89,7 +89,7 @@
       materialIndex.get(key).push(m);
     });
   }
-  const materialsOf = (bmk) => materialIndex.get(norm(bmk)) ?? [];
+  const materialsOf = (bmk) => (materialIndex.get(norm(bmk)) ?? []).filter(usable);
 
   /* ---------- Hauptschalter (Animation im GLB) und Spannungszustand der Leitungen ---------- */
   const SW_ANIM = "QB1_Schalten", SW_DUR = 0.6, SW_KEY = "schaltschrank.hauptschalter";
@@ -102,13 +102,42 @@
   const baseColor = new WeakMap();
   const switchedSpec = /Hauptstromkreis|230 V|Steuerstromkreis|NOT-AUS/;
   const powerMsg = () => (wired && !swOn ? "Hauptschalter AUS: Leitungen hinter -QB1 sind spannungsfrei (grau)." : "");
+  const GREY = [0.62, 0.62, 0.62];
+  const origMode = new WeakMap();
+  // Ungenutzte Materialien lädt der Viewer nicht; ein Zugriff darauf wirft einen Fehler -> überspringen
+  const usable = (m) => {
+    if (m.isLoaded === false) return false;
+    try { return !!m.pbrMetallicRoughness; } catch { return false; }
+  };
   function captureBase() {
-    (viewer.model?.materials ?? []).filter(isWire).forEach((m) => { if (!baseColor.has(m)) baseColor.set(m, [...m.pbrMetallicRoughness.baseColorFactor]); });
+    (viewer.model?.materials ?? []).filter(usable).forEach((m) => { if (!baseColor.has(m)) baseColor.set(m, [...m.pbrMetallicRoughness.baseColorFactor]); });
   }
+  // Bauteile, die laut Profil nicht verbaut sind (BMK, klein geschrieben)
+  const offBmk = () => new Set(COMPONENTS.filter((c) => Profile.isOff(c)).flatMap((c) => c.bmk.map(norm)));
+  const wireEnds = (m) => { const w = wireInfo(m); return [w.from, w.to].map((e) => norm(String(e).split(":")[0])); };
+  // Material ausgeblendet? (nur im Modus "ausblenden")
+  const isHiddenMat = (m) => {
+    if (Profile.state.mode !== "hide") return false;
+    const off = offBmk();
+    return isWire(m) ? wireEnds(m).some((e) => off.has(e)) : off.has(norm(m.name.split("|")[0]));
+  };
+  function setBlend(m, on) {
+    if (typeof m.setAlphaMode !== "function") return;
+    if (on) { if (!origMode.has(m)) origMode.set(m, m.getAlphaMode ? m.getAlphaMode() : "OPAQUE"); m.setAlphaMode("BLEND"); }
+    else if (origMode.has(m)) { m.setAlphaMode(origMode.get(m)); origMode.delete(m); }
+  }
+  // Erscheinungsbild: Grundfarbe, nicht verbaute Bauteile (grau/ausgeblendet), Spannungszustand der Leitungen
   function applyPower() {
-    (viewer.model?.materials ?? []).filter(isWire).forEach((m) => {
-      const dead = !swOn && switchedSpec.test(wireInfo(m).spec);
-      m.pbrMetallicRoughness.setBaseColorFactor(dead ? [0.62, 0.62, 0.62, 1] : (baseColor.get(m) || m.pbrMetallicRoughness.baseColorFactor));
+    const off = offBmk(), hide = Profile.state.mode === "hide";
+    (viewer.model?.materials ?? []).filter(usable).forEach((m) => {
+      const base = baseColor.get(m) || [...m.pbrMetallicRoughness.baseColorFactor];
+      let col = base, gone = false;
+      if (isWire(m)) {
+        if (wireEnds(m).some((e) => off.has(e))) { col = [...GREY, 1]; gone = hide; }
+        else if (!swOn && switchedSpec.test(wireInfo(m).spec)) col = [...GREY, 1];
+      } else if (off.has(norm(m.name.split("|")[0]))) { col = [...GREY, base[3] ?? 1]; gone = hide; }
+      m.pbrMetallicRoughness.setBaseColorFactor(gone ? [col[0], col[1], col[2], 0] : col);
+      setBlend(m, gone);
     });
     showWirePanel(powerMsg());
   }
@@ -159,7 +188,7 @@
   function buildLegend() {
     const box = $("#wireLegend"); box.replaceChildren();
     const seen = new Map();
-    (viewer.model?.materials ?? []).filter(isWire).forEach((m) => {
+    (viewer.model?.materials ?? []).filter((m) => isWire(m) && usable(m)).forEach((m) => {
       const spec = wireInfo(m).spec; if (seen.has(spec)) return;
       seen.set(spec, baseColor.get(m) || m.pbrMetallicRoughness.baseColorFactor);
     });
@@ -174,7 +203,7 @@
     setLegendOpen(isDesktop());
   }
   function exportWires() {
-    const rows = (viewer.model?.materials ?? []).filter(isWire).map(wireInfo).sort((a, b) => a.nr.localeCompare(b.nr));
+    const rows = (viewer.model?.materials ?? []).filter((m) => isWire(m) && usable(m)).map(wireInfo).sort((a, b) => a.nr.localeCompare(b.nr));
     const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
     const lines = [q(BRAND.csvHeader), q(`Leitungsliste aus dem 3D-Modell – Stand ${new Date().toLocaleDateString("de-DE")}`), "",
       ["Nr", "Netz", "Von", "Nach", "Leitung"].map(q).join(";"), ...rows.map((r) => [r.nr, r.net, r.from, r.to, r.spec].map(q).join(";"))];
@@ -190,7 +219,7 @@
     if (!wired) return 0;
     const keys = comp.bmk.map(norm);
     let n = 0;
-    (viewer.model?.materials ?? []).filter(isWire).forEach((m) => {
+    (viewer.model?.materials ?? []).filter((m) => isWire(m) && usable(m)).forEach((m) => {
       const w = wireInfo(m);
       if ([w.from, w.to].some((e) => keys.includes(norm(e.split(":")[0])))) { paint(m, [1, 0.85, 0.1, 1]); n++; }
     });
@@ -298,6 +327,10 @@
         select(state.activeId === c.id ? null : c, { scroll: false });
       });
 
+      // Schalter: Bauteil ist im Schaltschrank verbaut (abwählbar für andere Prüfungen)
+      const verbaut = h("label", { class: "verbaut", title: "Abwählen, wenn das Bauteil in diesem Schaltschrank nicht gebraucht wird" },
+        h("input", { type: "checkbox", checked: !Profile.isOff(c), onChange: (e) => setOff(c, !e.target.checked) }), " verbaut");
+
       // Detailbereich
       const body = document.createElement("div");
       body.className = "card-body";
@@ -329,7 +362,7 @@
         onClick: () => showInModel(c) }, "🔍 Im 3D-Modell zeigen"));
       body.append(dl, links);
 
-      card.append(head, body);
+      card.append(head, verbaut, body);
       list.appendChild(card);
     });
   }
@@ -357,6 +390,7 @@
     tip.replaceChildren(
       h("span", { class: "tip-bmk" }, comp.bmk.join(" · ")),
       h("span", { class: "tip-title" }, comp.title),
+      ...(Profile.isOff(comp) ? [h("span", { class: "tip-hint" }, "nicht verbaut")] : []),
       ...(touch ? [h("span", { class: "tip-hint" }, "Nochmal tippen für Details")] : []));
     tip.hidden = false;
     const box = viewer.parentElement.getBoundingClientRect();
@@ -376,7 +410,7 @@
     requestAnimationFrame(() => {
       hoverBusy = false;
       const mat = viewer.materialFromPoint(x, y);
-      const comp = mat && !isWire(mat) ? componentByBmk(mat.name.split("|")[0]) : null;
+      const comp = mat && !isWire(mat) && !isHiddenMat(mat) ? componentByBmk(mat.name.split("|")[0]) : null;
       viewer.style.cursor = comp ? "pointer" : "";
       if (comp) showTip(comp, x, y, false); else hideTip();
     });
@@ -389,7 +423,7 @@
     if (!viewer.modelIsVisible) return;
     // model-viewer rechnet intern selbst auf Elementkoordinaten um -> Client-Koordinaten übergeben
     const mat = viewer.materialFromPoint(e.clientX, e.clientY);
-    if (!mat) return select(null);
+    if (!mat || isHiddenMat(mat)) return select(null);
     if (isWire(mat)) {                 // Leitung angeklickt: Daten zeigen, Leitung markieren
       select(null);
       const w = wireInfo(mat);
@@ -456,12 +490,15 @@
     $("#btnWireCsv").hidden = !wired;
     $("#wireLegend").hidden = true;
     $("#wireToggle").hidden = true;
-    captureBase();
-    if (wired) buildLegend();
-    swCur = 0;
-    if (hasSwitch()) poseSwitch(swTime(swOn));
-    updateSwitchButton();
-    applyPower();
+    loader.classList.add("is-done");               // Ladebalken zuerst beenden, auch wenn unten etwas schiefgeht
+    try {
+      captureBase();
+      if (wired) buildLegend();
+      swCur = 0;
+      if (hasSwitch()) poseSwitch(swTime(swOn));
+      updateSwitchButton();
+      applyPower();
+    } catch (err) { console.error("Erscheinungsbild konnte nicht gesetzt werden:", err); }
     indexMaterials();
     COMPONENTS.forEach((c) => $(`.card[data-id="${c.id}"]`).classList.toggle("is-missing", !inModel(c)));
     loader.classList.add("is-done");
@@ -476,60 +513,103 @@
       "Das Modell konnte nicht geladen werden. Bitte die Seite über einen lokalen Webserver öffnen (nicht per Doppelklick).";
   });
 
-  /* ---------- E/A-Liste ---------- */
-  const STORE_KEY = "schaltschrank.operanden";
-  let operands = {};
-  try { operands = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { operands = {}; }
-  const saveOperands = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(operands)); } catch { /* privat/blockiert */ } };
+  /* ---------- Bauteile abwählen (nicht verbaut) ---------- */
+  function setOff(comp, off) {
+    const list = Profile.state.off, i = list.indexOf(comp.id);
+    if (off && i < 0) list.push(comp.id);
+    if (!off && i >= 0) list.splice(i, 1);
+    Profile.changed("off");
+  }
+  function refreshOff() {
+    $$(".card").forEach((el) => {
+      const c = COMPONENTS.find((x) => x.id === el.dataset.id);
+      const off = Profile.isOff(c);
+      el.classList.toggle("is-off", off);
+      el.querySelector(".verbaut input").checked = !off;
+    });
+    const n = COMPONENTS.length - Profile.state.off.length;
+    $("#offCount").textContent = `${n} von ${COMPONENTS.length} Bauteilen verbaut`;
+    $("#offMode").value = Profile.state.mode;
+    if (viewer.model) {
+      const keep = state.activeIds.map((id) => COMPONENTS.find((c) => c.id === id)).filter(Boolean);
+      try { clearHighlight(); applyPower(); } catch (err) { console.error(err); }
+      if (keep.length) selectMany(keep, { scroll: false });
+    }
+    renderIo();
+  }
+  $("#offAll").addEventListener("click", () => { Profile.state.off = []; Profile.changed("off"); });
+  $("#offNone").addEventListener("click", () => { Profile.state.off = COMPONENTS.map((c) => c.id); Profile.changed("off"); });
+  $("#offMode").addEventListener("change", (e) => { Profile.state.mode = e.target.value === "hide" ? "hide" : "grey"; Profile.changed("off"); });
 
-  const ioRows = [
-    ...IO_INPUTS.map((r) => ({ kind: "in", op: r[0], bmk: r[1], fn: r[2] })),
-    ...IO_OUTPUTS.map((r) => ({ kind: "out", op: r[0], bmk: r[1], fn: r[2] })),
-  ];
-  const ioState = { filter: "all", query: "" };
+  /* ---------- E/A-Liste (bearbeitbar, Teil des Prüfungsprofils) ---------- */
+  const STORE_KEY = "schaltschrank.operanden";
+  let operands = store.get(STORE_KEY, {});
+  const saveOperands = () => store.set(STORE_KEY, operands);
+  const io = () => Profile.state.io;
+  const ioState = { filter: "all", query: "", edit: false, focus: null };
+  const nextOp = (kind) => {
+    const pre = kind === "in" ? "I" : "O", used = new Set(io().filter((r) => r.k === kind).map((r) => r.op));
+    let n = 0; while (used.has(pre + n)) n++;
+    return pre + n;
+  };
+
+  function operandInput(r) {
+    const inp = h("input", { class: "op-input", type: "text", maxLength: 12, placeholder: r.k === "in" ? "E 0.0" : "A 0.0",
+      "aria-label": `Eigener Operand für ${r.op}`, value: operands[r.op] || "" });
+    inp.addEventListener("click", (e) => e.stopPropagation());
+    inp.addEventListener("input", () => { if (inp.value.trim()) operands[r.op] = inp.value.trim(); else delete operands[r.op]; saveOperands(); });
+    return inp;
+  }
+  function viewRow(r) {
+    const comp = r.bmk && componentByBmk(r.bmk);
+    const tr = h("tr", { class: (comp ? "is-link" : "") + (comp && Profile.isOff(comp) ? " is-off" : ""), title: comp ? `Im 3D-Modell zeigen: ${comp.title}` : null },
+      h("td", { class: "op" }, r.op),
+      h("td", null, r.op !== "–" && r.bmk ? operandInput(r) : null),
+      h("td", { class: "op" }, r.bmk),
+      h("td", null, r.fn));
+    if (comp) tr.addEventListener("click", () => { go("3d"); select(comp); });
+    return tr;
+  }
+  function editRow(r) {
+    const field = (key, label, cls, list) => {
+      const inp = h("input", { class: "cell-input " + cls, type: "text", value: r[key], "aria-label": `${label} (${r.op || "neu"})` });
+      if (list) inp.setAttribute("list", list);
+      inp.addEventListener("input", () => {
+        if (key === "op") { const old = r.op; r.op = inp.value; if (operands[old]) { operands[r.op] = operands[old]; delete operands[old]; saveOperands(); } }
+        else r[key] = inp.value;
+        Profile.save();
+      });
+      return inp;
+    };
+    const opIn = field("op", "Operand", "w-op"), bmkIn = field("bmk", "BMK", "w-bmk", "bmkList"), fnIn = field("fn", "Funktion", "w-fn");
+    if (ioState.focus === r) { ioState.focus = null; setTimeout(() => bmkIn.focus(), 0); }
+    return h("tr", { class: "edit-row" },
+      h("td", null, opIn), h("td", { class: "muted" }, "–"), h("td", null, bmkIn), h("td", null, fnIn),
+      h("td", { class: "edit-only" }, h("button", { type: "button", class: "icon-btn", title: "Zeile löschen", "aria-label": `Zeile ${r.op} löschen`,
+        onClick: () => { io().splice(io().indexOf(r), 1); Profile.changed("io"); } }, "✕")));
+  }
 
   function renderIo() {
     const body = $("#ioBody");
     body.textContent = "";
+    const edit = ioState.edit;
+    $("#pane-io").classList.toggle("is-edit", edit);
+    $("#btnIoEdit").textContent = edit ? "✓ Fertig" : "✎ Bearbeiten";
+    $("#btnIoEdit").setAttribute("aria-pressed", String(edit));
+    $("#ioEditTools").hidden = !edit;
+    $("#ioViewNote").hidden = edit;
+    $("#bmkList").replaceChildren(...COMPONENTS.flatMap((c) => c.bmk).map((b) => h("option", { value: b })));
     const q = norm(ioState.query);
-    const groups = [["in", "Eingänge"], ["out", "Ausgänge"]];
-    groups.forEach(([kind, label]) => {
+    [["in", "Eingänge"], ["out", "Ausgänge"]].forEach(([kind, label]) => {
       if (ioState.filter !== "all" && ioState.filter !== kind) return;
-      const rows = ioRows.filter((r) => r.kind === kind && (!q || norm(`${r.op} ${r.bmk} ${r.fn}`).includes(q)));
-      if (!rows.length) return;
-      const g = document.createElement("tr");
-      g.className = "group";
-      g.innerHTML = `<td colspan="4"></td>`;
-      g.firstChild.textContent = label;
-      body.appendChild(g);
-
-      rows.forEach((r) => {
-        const tr = document.createElement("tr");
-        const comp = r.bmk && componentByBmk(r.bmk);
-        if (comp) { tr.className = "is-link"; tr.title = `Im 3D-Modell zeigen: ${comp.title}`; }
-
-        const tdOp = document.createElement("td"); tdOp.className = "op"; tdOp.textContent = r.op;
-        const tdIn = document.createElement("td");
-        if (r.op !== "–" && r.bmk) {
-          const inp = document.createElement("input");
-          inp.className = "op-input"; inp.type = "text"; inp.maxLength = 12;
-          inp.placeholder = kind === "in" ? "E 0.0" : "A 0.0";
-          inp.setAttribute("aria-label", `Eigener Operand für ${r.op}`);
-          inp.value = operands[r.op] || "";
-          inp.addEventListener("click", (e) => e.stopPropagation());
-          inp.addEventListener("input", () => {
-            if (inp.value.trim()) operands[r.op] = inp.value.trim(); else delete operands[r.op];
-            saveOperands();
-          });
-          tdIn.appendChild(inp);
-        }
-        const tdB = document.createElement("td"); tdB.className = "op"; tdB.textContent = r.bmk;
-        const tdF = document.createElement("td"); tdF.textContent = r.fn;
-        tr.append(tdOp, tdIn, tdB, tdF);
-
-        if (comp) tr.addEventListener("click", () => { go("3d"); select(comp); });
-        body.appendChild(tr);
-      });
+      const rows = io().filter((r) => r.k === kind && (edit || !q || norm(`${r.op} ${r.bmk} ${r.fn}`).includes(q)));
+      if (!rows.length && !edit) return;
+      body.append(h("tr", { class: "group" }, h("td", { colspan: 5 }, label)));
+      rows.forEach((r) => body.append(edit ? editRow(r) : viewRow(r)));
+      if (edit) body.append(h("tr", { class: "add-row" }, h("td", { colspan: 5 },
+        h("button", { type: "button", class: "btn", onClick: () => {
+          const r = { k: kind, op: nextOp(kind), bmk: "", fn: "" }; io().push(r); ioState.focus = r; Profile.changed("io");
+        } }, `+ ${kind === "in" ? "Eingang" : "Ausgang"} hinzufügen`))));
     });
   }
   $("#ioSearch").addEventListener("input", (e) => { ioState.query = e.target.value; renderIo(); });
@@ -540,6 +620,10 @@
       renderIo();
     })
   );
+  $("#btnIoEdit").addEventListener("click", () => { ioState.edit = !ioState.edit; renderIo(); });
+  $("#btnIoReset").addEventListener("click", () => {
+    if (confirm("Die E/A-Liste auf die Standardwerte zurücksetzen? Eigene Änderungen gehen verloren.")) Profile.reset("io");
+  });
 
   $("#btnCsv").addEventListener("click", () => {
     const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -549,7 +633,7 @@
       "",
       ["Operand", "Eigener Operand", "BMK", "Funktion"].map(esc).join(";"),
     ];
-    ioRows.forEach((r) => lines.push([r.op, operands[r.op] || "", r.bmk, r.fn].map(esc).join(";")));
+    io().forEach((r) => lines.push([r.op, operands[r.op] || "", r.bmk, r.fn].map(esc).join(";")));
     const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -558,7 +642,40 @@
     URL.revokeObjectURL(a.href);
   });
 
-  /* ---------- Schnittstelle für protocol.js, rework.js, grafcet.js ---------- */
+  /* ---------- Prüfungsprofil (Menü: Name, Export, Import, Zurücksetzen) ---------- */
+  const dlg = $("#profileDlg");
+  function openProfile() {
+    $("#profName").value = Profile.state.name;
+    $("#profMsg").textContent = "";
+    dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", "");
+  }
+  $("#btnProfile").addEventListener("click", openProfile);
+  $("#profClose").addEventListener("click", () => (dlg.close ? dlg.close() : dlg.removeAttribute("open")));
+  $("#profName").addEventListener("input", (e) => { Profile.state.name = e.target.value.slice(0, 120); Profile.save(); showProfileName(); });
+  function showProfileName() { const n = Profile.state.name.trim(); $("#phMeta").textContent = [BRAND.docMeta, n].filter(Boolean).join(" · "); }
+  $("#profExport").addEventListener("click", () => {
+    const name = (Profile.state.name || "profil").replace(/[^\w\-äöüÄÖÜß]+/g, "_");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([Profile.exportData()], { type: "application/json" }));
+    a.download = `pruefungsprofil-${name}.json`; a.click(); URL.revokeObjectURL(a.href);
+    $("#profMsg").textContent = "Profil exportiert.";
+  });
+  $("#profImport").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; e.target.value = "";
+    if (!f) return;
+    try { Profile.importData(await f.text()); $("#profName").value = Profile.state.name; $("#profMsg").textContent = "Profil geladen."; }
+    catch (err) { $("#profMsg").textContent = err.message; }
+  });
+  $("#profReset").addEventListener("click", () => {
+    if (confirm("Alle Anpassungen (E/A-Liste, Umrüstung, Bauteilauswahl) auf die Standardwerte zurücksetzen?")) { Profile.reset(); $("#profName").value = ""; $("#profMsg").textContent = "Zurückgesetzt."; }
+  });
+  Profile.on((what) => {
+    if (what === "io") renderIo();
+    else if (what === "off" || what === "all") refreshOff();
+    if (what === "all") { showProfileName(); }
+  });
+
+  /* ---------- Schnittstelle für protocol.js, rework.js, qrview.js ---------- */
   function applyHash() {
     const m = location.hash.match(/^#\/bauteil\/(.+)$/);
     if (!m) return;
@@ -585,6 +702,8 @@
   renderChips();
   renderCards();
   renderIo();
+  refreshOff();
+  showProfileName();
   go("3d");
   applyHash();
 })();

@@ -29,11 +29,10 @@
       <button class="tab" data-go="io">E/A-Zuordnung</button>
       <button class="tab" data-go="protocol">Prüfprotokoll</button>
       <button class="tab" data-go="rework">Umrüstung</button>
-      <button class="tab" data-go="grafcet">GRAFCET</button>
-      <button class="tab" data-go="model">Modell-Check</button>
       <button class="tab" data-go="qr">QR-Codes</button>
     </nav>
     <span class="id-badge" id="brandBadge"></span>
+    <button type="button" class="profile-btn" id="btnProfile" title="Prüfung anpassen: Profil speichern, laden, zurücksetzen" aria-label="Prüfungsprofil">⚙<span> Prüfung</span></button>
   </header>
 
   <!-- Dokumentenkopf: erscheint nur im Ausdruck / PDF (Logo auf allen Dokumenten) -->
@@ -86,6 +85,17 @@
           <h2>Komponentenverzeichnis</h2>
           <input id="searchInput" class="search" type="search" placeholder="Filter nach BMK oder Bauteil …" autocomplete="off">
           <div class="chips" id="chips" role="group" aria-label="Kategorie"></div>
+          <details class="sel-tools" id="selTools">
+            <summary>Bauteile auswählen <span id="offCount"></span></summary>
+            <p class="sel-note">Nicht benötigte Bauteile abwählen (Schalter „verbaut“ an jeder Karte). Sie werden im 3D-Modell grau oder ausgeblendet.</p>
+            <div class="sel-row">
+              <button type="button" class="btn" id="offAll">Alle verbaut</button>
+              <button type="button" class="btn" id="offNone">Keines verbaut</button>
+              <label class="sel-mode">Nicht verbaute:
+                <select id="offMode"><option value="grey">grau anzeigen</option><option value="hide">ausblenden</option></select>
+              </label>
+            </div>
+          </details>
         </div>
         <div id="componentList" class="list"></div>
         <p id="emptyMsg" class="empty" hidden>Keine Bauteile gefunden.</p>
@@ -105,14 +115,20 @@
             <button class="seg-btn" data-f="in">Eingänge</button>
             <button class="seg-btn" data-f="out">Ausgänge</button>
           </div>
+          <button class="btn" id="btnIoEdit" type="button" aria-pressed="false">✎ Bearbeiten</button>
           <button class="btn" id="btnCsv" type="button">⇩ CSV exportieren</button>
           <button class="btn" id="btnIoPrint" type="button">⎙ Drucken / PDF</button>
         </div>
-        <p class="io-note">Trage in der Spalte „Eigener Operand“ deine systembezogenen Adressen ein (z. B. E 0.0). Die Eingaben bleiben in diesem Browser gespeichert.</p>
+        <p class="io-note" id="ioViewNote">Trage in der Spalte „Eigener Operand“ deine systembezogenen Adressen ein (z. B. E 0.0). Die Eingaben bleiben in diesem Browser gespeichert. Mit „Bearbeiten“ lassen sich Operand, BMK und Funktion für eine neue Prüfung ändern.</p>
+        <div class="io-note edit-tools" id="ioEditTools" hidden>
+          Bearbeiten: Felder direkt ändern, Zeilen mit ✕ löschen oder unten hinzufügen. Alles wird sofort gespeichert und ist Teil des Prüfungsprofils.
+          <button class="btn" id="btnIoReset" type="button">Auf Standard zurücksetzen</button>
+        </div>
+        <datalist id="bmkList"></datalist>
       </div>
       <div class="table-scroll">
         <table class="io-table">
-          <thead><tr><th>Operand</th><th>Eigener Operand</th><th>BMK</th><th>Funktion</th></tr></thead>
+          <thead><tr><th>Operand</th><th>Eigener Operand</th><th>BMK</th><th>Funktion</th><th class="edit-only"><span class="sr-only">Löschen</span></th></tr></thead>
           <tbody id="ioBody"></tbody>
         </table>
       </div>
@@ -124,13 +140,7 @@
     <!-- ===== Ansicht 4: Umrüstung / Vorbereitungsauftrag (js/rework.js) ===== -->
     <section id="pane-rework" class="page" hidden></section>
 
-    <!-- ===== Ansicht 5: GRAFCET (js/grafcet.js) ===== -->
-    <section id="pane-grafcet" class="page" hidden></section>
-
-    <!-- ===== Ansicht 6: Modell-Check (js/model.js) ===== -->
-    <section id="pane-model" class="page" hidden></section>
-
-    <!-- ===== Ansicht 7: QR-Etiketten (js/qrview.js) ===== -->
+    <!-- ===== Ansicht 5: QR-Etiketten (js/qrview.js) ===== -->
     <section id="pane-qr" class="page" hidden></section>
   </main>
 
@@ -141,10 +151,24 @@
     <button class="bn" data-go="io"><span>⇄</span>E/A</button>
     <button class="bn" data-go="protocol"><span>✓</span>Protokoll</button>
     <button class="bn" data-go="rework"><span>⚙</span>Umrüstung</button>
-    <button class="bn" data-go="grafcet"><span>⎇</span>GRAFCET</button>
-    <button class="bn" data-go="model"><span>◈</span>Modell</button>
     <button class="bn" data-go="qr"><span>▦</span>QR</button>
   </nav>
+
+  <!-- Prüfungsprofil -->
+  <dialog id="profileDlg" class="profile-dlg" aria-labelledby="profTitle">
+    <h2 id="profTitle">Prüfung anpassen</h2>
+    <p>Alles, was sich von Prüfung zu Prüfung ändert, bleibt in diesem Browser gespeichert: E/A-Liste, Umrüstungsplan und die Auswahl der verbauten Bauteile. Als Datei lässt sich das Profil sichern, auf ein anderes Gerät mitnehmen und später wieder laden.</p>
+    <label class="field">Name des Profils (erscheint im Ausdruck)
+      <input id="profName" type="text" maxlength="120" placeholder="z. B. Winter 2026/27">
+    </label>
+    <div class="dlg-actions">
+      <button type="button" class="btn primary" id="profExport">⇩ Profil exportieren</button>
+      <label class="btn file-btn">⇧ Profil laden<input id="profImport" type="file" accept="application/json,.json" hidden></label>
+      <button type="button" class="btn" id="profReset">Alles zurücksetzen</button>
+    </div>
+    <p id="profMsg" class="dlg-msg" role="status"></p>
+    <div class="dlg-foot"><button type="button" class="btn" id="profClose">Schließen</button></div>
+  </dialog>
 
   <script src="js/boot.js"></script>
 </body>

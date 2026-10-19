@@ -1,0 +1,10 @@
+# Lokale, nicht öffentliche Dateien (Firmenlogo, Firmenmodell, Prüfungsunterlagen)
+*.local.js
+*.local.css
+assets/local/
+tools/add_animation.py
+tools/build_wiring.py
+tools/wiring_spec.py
+tools/leitungsliste-vorschau.csv
+LIES-MICH-PRIVAT.txt
+START.txt

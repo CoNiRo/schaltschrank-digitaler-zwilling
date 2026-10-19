@@ -16,8 +16,6 @@ const VIEW_TITLES = {
   io: "Zuordnungsliste der Ein- und Ausgänge",
   protocol: "Prüfprotokoll",
   rework: "Umbau – Checkliste",
-  grafcet: "GRAFCET – Beispielablauf",
-  model: "Modell-Prüfbericht (CAx)",
   qr: "QR-Etiketten für Bauteile",
 };
 
@@ -156,7 +154,7 @@ const PROTOCOL = {
  * ========================================================== */
 const REWORK_META = {
   title: "Umbau – Checkliste",
-  intro: "Allgemeine Checkliste für Umbau- und Erweiterungsarbeiten an einem Schaltschrank. Passe die Schritte in js/data.js an deinen Auftrag an.",
+  intro: "Allgemeine Checkliste für Umbau- und Erweiterungsarbeiten an einem Schaltschrank. Passe die Schritte mit „Bearbeiten“ an deinen Auftrag an.",
   targetTitle: "Beispiel: Sollverhalten nach dem Umbau",
   stepsTitle: "Arbeitsschritte",
   hintsTitle: "Hinweise",
@@ -177,9 +175,8 @@ const REWORK_STEPS = [
   { title: "Zuordnungsliste und Schaltplan anpassen",
     text: "Änderungen in Schaltplan und Zuordnungsliste eintragen.",
     go: ["io", "E/A-Liste öffnen"] },
-  { title: "Programm und GRAFCET anpassen",
-    bullets: ["Neue Ein- und Ausgänge im Programm anlegen.", "Ablauf im GRAFCET ergänzen und testen."],
-    go: ["grafcet", "GRAFCET ansehen"] },
+  { title: "Programm anpassen",
+    bullets: ["Neue Ein- und Ausgänge im Programm anlegen.", "Ablauf ergänzen und testen."] },
   { title: "Prüfung nach dem Umbau",
     text: "Sichtprüfung, Messungen und Funktionsprüfung durchführen und dokumentieren.",
     go: ["protocol", "Zum Prüfprotokoll"] },
@@ -197,41 +194,3 @@ const REWORK_HINTS = [
   "Vor dem Wiedereinschalten Schutzleiterdurchgängigkeit und Isolationswiderstand messen.",
 ];
 
-/* ==========================================================
- * GRAFCET – Beispielablauf
- * Aktionen: { t: Text, c: Bedingung (optional) }
- * out = Übergänge { c: Bedingung, to: Folgeschritt }, ¬ = Negation
- * ========================================================== */
-const GRAFCET_META = {
-  title: "GRAFCET – Beispielablauf",
-  note: "Beispiel für die Darstellung. Ersetze die Pläne in js/data.js (GRAFCETS) durch deine eigenen.",
-  simEnd: "Zyklus beendet. Weiter mit Schritt 500.",
-};
-
-const GRAFCETS = [
-  { id: "haupt", title: "Hauptgrafcet",
-    steps: [
-      { n: "1", init: true, act: [], out: [{ c: "-KE2 * -SJ1", to: "2" }] },
-      { n: "2", act: [{ t: "G_Auto { INIT }" }, { t: "-PF1" }], out: [{ c: "-SJ2 + ¬-KE2", to: "1" }] },
-    ] },
-  { id: "auto", title: "G_Auto",
-    steps: [
-      { n: "500", init: true, act: [], out: [{ c: "-SJ1 * -BG1 * -BG2", to: "501" }] },
-      { n: "501", act: [{ t: "Werkstück prüfen" }], out: [{ c: "[Teil = A]", to: "502" }, { c: "[Teil = B]", to: "503" }] },
-      { n: "502", act: [{ t: "-MB1" }], out: [{ c: "2 s / -BG3", to: "504" }] },
-      { n: "503", act: [{ t: "-QA1" }], out: [{ c: "3 s / -BG3", to: "504" }] },
-      { n: "504", act: [{ t: "-PF1", c: "Takt" }], out: [{ c: "-BG1", to: "505" }] },
-      { n: "505", act: [], out: [{ c: "¬-BG2", to: "500" }] },
-    ],
-    paths: {
-      a: ["500", "501", "502", "504", "505"],
-      b: ["500", "501", "503", "504", "505"],
-    },
-    pathNames: { a: "Werkstück A", b: "Werkstück B" },
-  },
-  { id: "einricht", title: "G_Einricht",
-    steps: [
-      { n: "300", init: true, act: [], out: [{ c: "¬-SJ1", to: "301" }] },
-      { n: "301", act: [{ t: "-QA1", c: "-SJ1 * ¬-BG3" }, { t: "-QA2", c: "-SJ2 * ¬-BG1" }], out: [{ c: "-SJ1", to: "300" }] },
-    ] },
-];
